@@ -1,0 +1,7 @@
+node_modules/
+config.yaml
+.env
+*.log
+playwright-report/
+test-results/
+.DS_Store

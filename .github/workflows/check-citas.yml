@@ -1,0 +1,51 @@
+name: Comprobar citas homologación
+
+on:
+  schedule:
+    # Cada 15 minutos (GitHub puede retrasar cron en repos gratuitos)
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Instalar Chromium (Playwright)
+        run: npx playwright install --with-deps chromium
+
+      - name: Ejecutar comprobación
+        env:
+          PROXY_URL: ${{ secrets.PROXY_URL }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+        run: |
+          if [ -n "$TELEGRAM_BOT_TOKEN" ] && [ -n "$TELEGRAM_CHAT_ID" ]; then
+            export TELEGRAM_ENABLED=true
+          fi
+          if [ -n "$WEBHOOK_URL" ]; then
+            export WEBHOOK_ENABLED=true
+          fi
+          npm run check 2>&1 | tee check-output.log
+
+      - name: Subir log de la comprobación
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: last-check-log
+          path: check-output.log
+          retention-days: 3

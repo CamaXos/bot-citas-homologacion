@@ -1,0 +1,19 @@
+{
+  "name": "bot-citas-homologacion",
+  "version": "1.0.0",
+  "description": "Monitor de citas disponibles para homologación de títulos (Qmatic MICIU)",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "check": "node src/index.js --once",
+    "start": "node src/index.js",
+    "test": "node src/index.js --once"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.0",
+    "playwright": "^1.52.0"
+  }
+}

@@ -1,0 +1,37 @@
+# Copia este archivo a config.yaml y ajusta los valores.
+
+url: "https://citaprevia.ciencia.gob.es/qmaticwebbooking/#/"
+
+# Textos exactos en la web (case-insensitive, parcial)
+branch: "Oficina virtual"
+service: "Asistencia reconocimiento títulos"
+
+# Intervalo de comprobación en minutos (solo en modo continuo, no en GitHub Actions)
+poll_interval_minutes: 15
+
+# Timeout de navegación en segundos
+timeout_seconds: 60
+
+# Proxy HTTP/HTTPS opcional (útil si tu IP está bloqueada)
+# Ejemplo: "http://usuario:pass@host:8080"
+proxy: null
+
+# Notificaciones
+notifications:
+  console: true
+
+  telegram:
+    enabled: false
+    bot_token: ""   # o variable de entorno TELEGRAM_BOT_TOKEN
+    chat_id: ""     # o variable de entorno TELEGRAM_CHAT_ID
+    # Solo envía alerta cuando hay citas (SLOTS_AVAILABLE)
+
+  webhook:
+    enabled: false
+    url: ""         # o variable de entorno WEBHOOK_URL
+    # Mismas reglas que Telegram: alerta solo cuando hay citas disponibles
+
+  email:
+    enabled: false
+    # Usa webhook a servicios como SendGrid/Resend, o implementa SMTP propio.
+    # Por simplicidad, configura un webhook que reenvíe a tu servicio de email.
