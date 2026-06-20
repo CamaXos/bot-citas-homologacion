@@ -2,9 +2,11 @@ name: Comprobar citas homologación
 
 on:
   schedule:
-    # Cada 15 minutos (GitHub puede retrasar cron en repos gratuitos)
-    - cron: '*/15 * * * *'
+    # Cada ~15 min, evitando :00/:15/:30/:45 UTC (picos de carga en GitHub)
+    - cron: '7,22,37,52 * * * *'
   workflow_dispatch:
+  repository_dispatch:
+    types: [check-citas]
 
 jobs:
   check:

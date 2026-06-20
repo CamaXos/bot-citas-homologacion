@@ -130,14 +130,17 @@ Recibe un POST JSON:
    | `PROXY_URL` | No | Si GitHub también está bloqueado |
 
 3. **Activa Actions:** el workflow `.github/workflows/check-citas.yml` se ejecuta:
-   - Cada **15 minutos** (cron)
+   - Cada **~15 minutos** (cron de GitHub, puede tardar en activarse en repos nuevos)
    - Manualmente desde **Actions → Comprobar citas homologación → Run workflow**
+   - Desde fuera con **`repository_dispatch`** (recomendado si el cron no dispara)
 
-4. **Revisa logs:** en la pestaña Actions verás 🟢/🟡/🔴 según el resultado. Cada ejecución guarda un artefacto `last-check-log` con la salida completa.
+4. **Si el cron NO corre solo** (solo ves ejecuciones manuales): sigue la guía **[docs/CRON-EXTERNO.md](docs/CRON-EXTERNO.md)** — cron-job.org gratuito llama a la API de GitHub cada 15 min. Tarda 5 minutos en configurar.
+
+5. **Revisa logs:** en la pestaña Actions verás 🟢/🟡/🔴 según el resultado. Cada ejecución guarda un artefacto `last-check-log` con la salida completa.
 
 > **Nota:** Telegram y webhook alertan cuando hay citas (`SLOTS_AVAILABLE`) o errores (`IP_BLOCKED`, `SITE_DOWN`, `ERROR`). No avisan en comprobaciones normales sin citas (`NO_SLOTS`), para evitar spam cada 15 min.
 
-> **Nota:** GitHub puede retrasar jobs `cron` en repos gratuitos varios minutos. Para avisos urgentes, combina con ejecución manual o un segundo trigger externo (p. ej. cron-job.org llamando `workflow_dispatch` vía API).
+> **Nota:** El `schedule` de GitHub no es fiable al 100 % (retrasos, repos nuevos, picos a en punto). El método externo de `docs/CRON-EXTERNO.md` es la opción más estable sin coste.
 
 ### Alternativas baratas
 
