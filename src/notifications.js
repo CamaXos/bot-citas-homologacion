@@ -1,5 +1,12 @@
 import { STATUS_LABELS } from './status.js';
 
+const NOTIFY_STATUSES = new Set([
+  'SLOTS_AVAILABLE',
+  'IP_BLOCKED',
+  'SITE_DOWN',
+  'ERROR',
+]);
+
 function formatMessage(result) {
   const label = STATUS_LABELS[result.status] ?? result.status;
   const lines = [
@@ -91,7 +98,7 @@ export async function sendNotifications(result, config) {
     await notifyConsole(result);
   }
 
-  if (notifications.telegram?.enabled && result.status === 'SLOTS_AVAILABLE') {
+  if (notifications.telegram?.enabled && NOTIFY_STATUSES.has(result.status)) {
     try {
       await notifyTelegram(result, notifications.telegram);
     } catch (err) {
@@ -99,7 +106,7 @@ export async function sendNotifications(result, config) {
     }
   }
 
-  if (notifications.webhook?.enabled && result.status === 'SLOTS_AVAILABLE') {
+  if (notifications.webhook?.enabled && NOTIFY_STATUSES.has(result.status)) {
     try {
       await notifyWebhook(result, notifications.webhook);
     } catch (err) {

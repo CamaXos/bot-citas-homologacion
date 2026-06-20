@@ -17,10 +17,10 @@ El bot replica el flujo manual en la web:
 | Estado | Significado |
 |--------|-------------|
 | `SLOTS_AVAILABLE` | Hay citas — **se envía alerta** |
-| `NO_SLOTS` | Sitio accesible, sin citas en el periodo |
-| `SITE_DOWN` | Timeout, error de conexión o HTTP 5xx |
-| `IP_BLOCKED` | HTTP 403/429, captcha, WAF o página inesperada |
-| `ERROR` | Otro fallo durante la automatización |
+| `NO_SLOTS` | Sitio accesible, sin citas — sin alerta |
+| `SITE_DOWN` | Timeout, error de conexión o HTTP 5xx — **se envía alerta** |
+| `IP_BLOCKED` | HTTP 403/429, captcha, WAF o página inesperada — **se envía alerta** |
+| `ERROR` | Otro fallo durante la automatización — **se envía alerta** |
 
 ## Requisitos
 
@@ -135,7 +135,7 @@ Recibe un POST JSON:
 
 4. **Revisa logs:** en la pestaña Actions verás 🟢/🟡/🔴 según el resultado. Cada ejecución guarda un artefacto `last-check-log` con la salida completa.
 
-> **Nota:** Telegram y webhook **solo alertan** cuando hay citas (`SLOTS_AVAILABLE`). Las comprobaciones normales sin citas y los errores aparecen en los logs de Actions.
+> **Nota:** Telegram y webhook alertan cuando hay citas (`SLOTS_AVAILABLE`) o errores (`IP_BLOCKED`, `SITE_DOWN`, `ERROR`). No avisan en comprobaciones normales sin citas (`NO_SLOTS`), para evitar spam cada 15 min.
 
 > **Nota:** GitHub puede retrasar jobs `cron` en repos gratuitos varios minutos. Para avisos urgentes, combina con ejecución manual o un segundo trigger externo (p. ej. cron-job.org llamando `workflow_dispatch` vía API).
 

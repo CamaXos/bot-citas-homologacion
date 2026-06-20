@@ -24,12 +24,12 @@ notifications:
     enabled: false
     bot_token: ""   # o variable de entorno TELEGRAM_BOT_TOKEN
     chat_id: ""     # o variable de entorno TELEGRAM_CHAT_ID
-    # Solo envía alerta cuando hay citas (SLOTS_AVAILABLE)
+    # Alerta en SLOTS_AVAILABLE, IP_BLOCKED, SITE_DOWN y ERROR (no en NO_SLOTS)
 
   webhook:
     enabled: false
     url: ""         # o variable de entorno WEBHOOK_URL
-    # Mismas reglas que Telegram: alerta solo cuando hay citas disponibles
+    # Mismas reglas que Telegram
 
   email:
     enabled: false
