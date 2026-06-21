@@ -1,4 +1,5 @@
 # Copia este archivo a config.yaml y ajusta los valores.
+# config.yaml está en .gitignore — NUNCA subas datos personales al repo.
 
 url: "https://citaprevia.ciencia.gob.es/qmaticwebbooking/#/"
 
@@ -6,15 +7,31 @@ url: "https://citaprevia.ciencia.gob.es/qmaticwebbooking/#/"
 branch: "Oficina virtual"
 service: "Asistencia reconocimiento títulos"
 
-# Intervalo de comprobación en minutos (solo en modo continuo, no en GitHub Actions)
+# Intervalo de comprobación en minutos (modo npm start / npm run bot)
 poll_interval_minutes: 15
 
 # Timeout de navegación en segundos
 timeout_seconds: 60
 
+# Tiempo máximo para recibir código OTP por Telegram (minutos)
+otp_timeout_minutes: 8
+
+# Reserva automática cuando hay cita (requiere perfil completo y npm run bot)
+auto_book: false
+
 # Proxy HTTP/HTTPS opcional (útil si tu IP está bloqueada)
 # Ejemplo: "http://usuario:pass@host:8080"
 proxy: null
+
+# Perfil de reserva (datos personales — NO subir al repo)
+# También configurable con /datos en Telegram o variables BOOKING_*
+profile:
+  nombre: ""
+  apellidos: ""
+  dni: ""              # NIE, DNI o pasaporte (6-9 caracteres alfanuméricos)
+  email: ""
+  telefono: ""         # 9 dígitos sin prefijo, ej. 637282322
+  numero_expediente: "" # mínimo 9 caracteres
 
 # Notificaciones
 notifications:
@@ -24,14 +41,16 @@ notifications:
     enabled: false
     bot_token: ""   # o variable de entorno TELEGRAM_BOT_TOKEN
     chat_id: ""     # o variable de entorno TELEGRAM_CHAT_ID
-    # Alerta en SLOTS_AVAILABLE, IP_BLOCKED, SITE_DOWN y ERROR (no en NO_SLOTS)
+    # Alerta en SLOTS_AVAILABLE, reserva, IP_BLOCKED, SITE_DOWN y ERROR
 
   webhook:
     enabled: false
     url: ""         # o variable de entorno WEBHOOK_URL
-    # Mismas reglas que Telegram
 
   email:
     enabled: false
-    # Usa webhook a servicios como SendGrid/Resend, o implementa SMTP propio.
-    # Por simplicidad, configura un webhook que reenvíe a tu servicio de email.
+
+# Variables de entorno alternativas para perfil (despliegue en nube):
+# BOOKING_PROFILE='{"nombre":"...","apellidos":"...","dni":"...","email":"...","telefono":"...","numero_expediente":"..."}'
+# BOOKING_NOMBRE, BOOKING_APELLIDOS, BOOKING_DNI, BOOKING_EMAIL, BOOKING_TELEFONO, BOOKING_NUMERO_EXPEDIENTE
+# AUTO_BOOK=true

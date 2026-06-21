@@ -5,6 +5,8 @@ const NOTIFY_STATUSES = new Set([
   'IP_BLOCKED',
   'SITE_DOWN',
   'ERROR',
+  'BOOKING_SUCCESS',
+  'BOOKING_PENDING',
 ]);
 
 function formatMessage(result) {
@@ -34,6 +36,8 @@ async function notifyConsole(result) {
   const text = formatMessage(result);
   if (result.status === 'SLOTS_AVAILABLE') {
     console.log('\n🟢 ' + text.replace(/\n/g, '\n   '));
+  } else if (result.status === 'BOOKING_SUCCESS' || result.status === 'BOOKING_PENDING') {
+    console.log('\n✅ ' + text.replace(/\n/g, '\n   '));
   } else if (result.status === 'NO_SLOTS') {
     console.log('🟡 ' + text.replace(/\n/g, '\n   '));
   } else {

@@ -7,6 +7,7 @@
   "scripts": {
     "check": "node src/index.js --once",
     "start": "node src/index.js",
+    "bot": "node src/telegram-bot.js",
     "test": "node src/index.js --once"
   },
   "engines": {

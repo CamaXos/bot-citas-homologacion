@@ -1,12 +1,11 @@
 import { chromium } from 'playwright';
 import { Status } from './status.js';
-
-const NO_SLOTS_PATTERNS = [
-  /no hay citas disponibles/i,
-  /no hay citas disponible/i,
-  /inténtelo mas tarde/i,
-  /intente mas tarde/i,
-];
+import {
+  navigateToDateTimeStep,
+  detectNoSlotsMessage,
+  findAvailableSlots,
+  escapeRegex,
+} from './qmatic-nav.js';
 
 const BLOCKED_PATTERNS = [
   /access denied/i,
@@ -18,10 +17,6 @@ const BLOCKED_PATTERNS = [
   /error 403/i,
   /error 429/i,
 ];
-
-function escapeRegex(text) {
-  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
 
 function buildResult(status, message, extra = {}) {
   return { status, message, slots: [], ...extra };
@@ -63,69 +58,6 @@ function parseTimeslotsFromApi(body) {
   return [...new Set(slots)];
 }
 
-async function expandAccordion(page, buttonPattern) {
-  const button = page.getByRole('button', { name: buttonPattern });
-  await button.waitFor({ state: 'visible', timeout: 15000 });
-  const expanded = await button.getAttribute('aria-expanded');
-  if (expanded !== 'true') {
-    await button.click();
-  }
-}
-
-async function selectRadioByLabel(page, labelPattern) {
-  const radio = page.getByRole('radio', { name: labelPattern });
-  await radio.waitFor({ state: 'attached', timeout: 15000 });
-  await radio.click({ force: true });
-}
-
-async function detectSlotsInUi(page) {
-  const slots = [];
-
-  const timeSelectors = [
-    '[class*="timeslot" i]:not([disabled])',
-    '[class*="time-slot" i]:not([disabled])',
-    '[data-testid*="timeslot" i]',
-    'button[class*="slot" i]:not([disabled])',
-    '.qm-timeslot:not(.disabled)',
-  ];
-
-  for (const selector of timeSelectors) {
-    const elements = page.locator(selector);
-    const count = await elements.count();
-    for (let i = 0; i < count; i++) {
-      const text = (await elements.nth(i).innerText()).trim();
-      if (text && /\d{1,2}[:.]\d{2}/.test(text)) {
-        slots.push(text.replace(/\s+/g, ' '));
-      }
-    }
-  }
-
-  const dateButtons = page.locator(
-    'button[aria-label*="disponible" i], .calendar-day.available, [class*="available-day" i]',
-  );
-  const dateCount = await dateButtons.count();
-  for (let i = 0; i < dateCount; i++) {
-    const label = (await dateButtons.nth(i).getAttribute('aria-label')) ||
-      (await dateButtons.nth(i).innerText());
-    if (label?.trim()) slots.push(`Fecha: ${label.trim()}`);
-  }
-
-  return [...new Set(slots)];
-}
-
-async function detectNoSlotsMessage(page) {
-  for (const pattern of NO_SLOTS_PATTERNS) {
-    const el = page.getByText(pattern);
-    if (await el.count()) {
-      const visible = await el.first().isVisible().catch(() => false);
-      if (visible) {
-        return (await el.first().innerText()).trim();
-      }
-    }
-  }
-  return null;
-}
-
 async function detectBlockedContent(page, httpStatus) {
   if (httpStatus === 403 || httpStatus === 429) return true;
 
@@ -151,8 +83,6 @@ async function detectBlockedContent(page, httpStatus) {
 
 export async function checkAvailability(config) {
   const timeoutMs = config.timeout_seconds * 1000;
-  const branchPattern = new RegExp(escapeRegex(config.branch), 'i');
-  const servicePattern = new RegExp(escapeRegex(config.service), 'i');
 
   const launchOptions = { headless: true };
   if (config.proxy) {
@@ -229,25 +159,10 @@ export async function checkAvailability(config) {
       );
     }
 
-    await page.getByRole('heading', { name: /reserva de cita/i }).waitFor({
-      state: 'visible',
-      timeout: timeoutMs,
-    });
-
-    // Paso 1: sucursal
-    await expandAccordion(page, /Seleccionar sucursal/i);
-    await selectRadioByLabel(page, branchPattern);
-
-    // Paso 2: servicio
-    await expandAccordion(page, /Seleccionar servicio/i);
-    await selectRadioByLabel(page, servicePattern);
-
-    // Paso 3: fecha y hora
-    await expandAccordion(page, /Seleccionar fecha y hora/i);
-    await page.waitForTimeout(2500);
+    await navigateToDateTimeStep(page, config);
 
     const noSlotsText = await detectNoSlotsMessage(page);
-    const uiSlots = await detectSlotsInUi(page);
+    const uiSlots = (await findAvailableSlots(page)).map((s) => s.text);
     const allSlots = [...new Set([...capturedApiSlots, ...uiSlots])];
 
     const base = {
@@ -260,20 +175,15 @@ export async function checkAvailability(config) {
     if (allSlots.length > 0) {
       return buildResult(
         Status.SLOTS_AVAILABLE,
-        `¡Hay ${allSlots.length} hueco(s) disponible(s)! Reserva manualmente cuanto antes.`,
+        `¡Hay ${allSlots.length} hueco(s) disponible(s)!`,
         { ...base, slots: allSlots },
       );
     }
 
     if (noSlotsText) {
-      return buildResult(
-        Status.NO_SLOTS,
-        noSlotsText,
-        base,
-      );
+      return buildResult(Status.NO_SLOTS, noSlotsText, base);
     }
 
-    // Sin mensaje explícito ni slots: comprobar si el paso 3 cargó
     const step3 = page.getByRole('heading', { name: /SELECCIONAR FECHA Y HORA/i });
     const step3Visible = await step3.isVisible().catch(() => false);
 
@@ -316,3 +226,5 @@ export async function checkAvailability(config) {
     if (browser) await browser.close();
   }
 }
+
+export { escapeRegex };
